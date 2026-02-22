@@ -19,16 +19,20 @@ import {
 } from '@/components/ui/select';
 import { MapPin, Send, Loader2 } from 'lucide-react';
 import { useReports } from '@/context/ReportsContext';
+import { useIdentity } from '@/context/IdentityContext';
 import { VEHICLE_TYPES, DIRECTIONS } from '@/types/report';
 import { toast } from 'sonner';
 
 interface ReportFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  prefillLat?: number;
+  prefillLng?: number;
 }
 
-const ReportForm = ({ open, onOpenChange }: ReportFormProps) => {
+const ReportForm = ({ open, onOpenChange, prefillLat, prefillLng }: ReportFormProps) => {
   const { addReport, userLocation } = useReports();
+  const { identity, incrementReportCount } = useIdentity();
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [officerCount, setOfficerCount] = useState('');
@@ -38,11 +42,16 @@ const ReportForm = ({ open, onOpenChange }: ReportFormProps) => {
   const [locating, setLocating] = useState(false);
 
   useEffect(() => {
-    if (open && userLocation) {
-      setLat(userLocation.lat.toFixed(6));
-      setLng(userLocation.lng.toFixed(6));
+    if (open) {
+      if (prefillLat !== undefined && prefillLng !== undefined) {
+        setLat(prefillLat.toFixed(6));
+        setLng(prefillLng.toFixed(6));
+      } else if (userLocation) {
+        setLat(userLocation.lat.toFixed(6));
+        setLng(userLocation.lng.toFixed(6));
+      }
     }
-  }, [open, userLocation]);
+  }, [open, userLocation, prefillLat, prefillLng]);
 
   const handleUseMyLocation = () => {
     setLocating(true);
@@ -77,9 +86,10 @@ const ReportForm = ({ open, onOpenChange }: ReportFormProps) => {
       vehicleType: vehicleType || undefined,
       direction: direction || undefined,
       details: details || undefined,
-      reportedBy: 'anonymous',
+      reportedBy: identity?.nickname ?? 'anonymous',
     });
 
+    incrementReportCount();
     toast.success('Report submitted! Thank you for helping the community.');
     onOpenChange(false);
     setOfficerCount('');

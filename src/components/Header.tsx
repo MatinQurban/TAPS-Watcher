@@ -1,6 +1,7 @@
-import { Shield, Plus, Bell } from 'lucide-react';
+import { Shield, Plus, Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReports } from '@/context/ReportsContext';
+import { useIdentity } from '@/context/IdentityContext';
 import { Badge } from '@/components/ui/badge';
 
 interface HeaderProps {
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 const Header = ({ onOpenReport, onOpenSettings }: HeaderProps) => {
   const { reports, proximitySettings } = useReports();
+  const { identity, trustLevel } = useIdentity();
   const activeCount = reports.filter((r) => r.expiresAt > Date.now()).length;
 
   return (
@@ -26,6 +28,15 @@ const Header = ({ onOpenReport, onOpenSettings }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {identity && (
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+              <User className="w-3.5 h-3.5" />
+              <span>{identity.nickname}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary">
+                {trustLevel}
+              </Badge>
+            </div>
+          )}
           {activeCount > 0 && (
             <Badge variant="secondary" className="bg-primary/15 text-primary text-xs">
               {activeCount} active
