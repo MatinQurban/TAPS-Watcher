@@ -29,12 +29,18 @@ function createAlertIcon(minutesAgo: number) {
   });
 }
 
-const MapView = () => {
+interface MapViewProps {
+  onMapClick?: (lat: number, lng: number) => void;
+}
+
+const MapView = ({ onMapClick }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const { reports, setUserLocation } = useReports();
   const initializedRef = useRef(false);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
 
   // Initialize map
   useEffect(() => {
@@ -53,6 +59,13 @@ const MapView = () => {
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     mapRef.current = map;
+
+    // Map click handler for reporting
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      if (onMapClickRef.current) {
+        onMapClickRef.current(e.latlng.lat, e.latlng.lng);
+      }
+    });
 
     // Fix sizing after render
     const resizeObserver = new ResizeObserver(() => map.invalidateSize());
